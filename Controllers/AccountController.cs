@@ -44,22 +44,24 @@ namespace HeroGame.Controllers
                 return BadRequest( new { message = "Username or password is incorrect" } );
             }
 
-            ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity( new[]{
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.NameIdentifier, user.AccountId.ToString())
-                    } 
-                ) 
-            );
+            var claims = new List<Claim> {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.NameIdentifier, user.AccountId.ToString())
+            };
 
+            //ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(
+            //    new ClaimsIdentity( new[]{
+            //        new Claim(ClaimTypes.Name, user.UserName),
+            //        new Claim(ClaimTypes.NameIdentifier, user.AccountId.ToString())
+            //        } 
+            //    ) 
+            //);
+            var claimsIdentity = new ClaimsIdentity( claims, CookieAuthenticationDefaults.AuthenticationScheme );
             AuthenticationProperties properties = new AuthenticationProperties { AllowRefresh = true, IsPersistent = true };
-            await Request.HttpContext.SignInAsync( CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, properties );
+            await HttpContext.SignInAsync( CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal( claimsIdentity ), properties );
 
             // return basic user info and authentication token
-            return Ok( new {
-                Id = user.AccountId,
-                Username = user.UserName,
-            } );
+            return Ok();
         }
 
         [AllowAnonymous]

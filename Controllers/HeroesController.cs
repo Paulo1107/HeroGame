@@ -4,6 +4,7 @@ namespace HeroGame.Controllers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Claims;
     using System.Threading.Tasks;
     using AutoMapper;
     using HeroGame.Entities;
@@ -37,18 +38,29 @@ namespace HeroGame.Controllers
         {
             // map model to entity
             Hero hero = _mapper.Map<Hero>( model );
-
+            var accountId = int.Parse( HttpContext.User.Claims.Single( c => c.Type == ClaimTypes.NameIdentifier ).Value);
             try
             {
-                // create user
-                _heroesService.Create( hero );
-                return Ok();
+                var heros = new Hero {
+                    AccountId = accountId,
+                    Name = "TestName",
+                    Level = 1,
+                    Experience = 0,
+                    AttackPoints = 5,
+                    HealthPoints = 20,
+                    MaxHealthPoints = 20
+                };
+                //{
+                //    // create user
+                _heroesService.Create( heros );
             }
+            //}
             catch( AppException ex )
             {
                 // return error message if there was an exception
                 return BadRequest( new { message = ex.Message } );
             }
+            return Ok();
         }
 
         [AllowAnonymous]

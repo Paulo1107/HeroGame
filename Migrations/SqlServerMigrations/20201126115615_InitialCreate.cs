@@ -42,7 +42,13 @@ namespace HeroGame.Migrations.SqlServerMigrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Heroes", x => x.HeroId);
+                    table.PrimaryKey("PK_Heroes", x => x.HeroId); 
+                    table.ForeignKey(
+                         name: "FK_Heroes_Account_AccountId",
+                         column: x => x.AccountId,
+                         principalTable: "Accounts",
+                         principalColumn: "AccountId",
+                         onDelete: ReferentialAction.Cascade );
                 });
         }
 
