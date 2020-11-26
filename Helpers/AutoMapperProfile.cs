@@ -1,5 +1,4 @@
 ﻿
-
 namespace HeroGame.Helpers
 {
     using AutoMapper;
@@ -13,6 +12,7 @@ namespace HeroGame.Helpers
             CreateMap<Account, UserModel>();
             CreateMap<RegisterModel, Account>();
             CreateMap<UpdateModel, Account>();
+            CreateMap<RegisterHeroes, Hero>();
         }
     }
 }

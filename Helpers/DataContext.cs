@@ -7,7 +7,6 @@ namespace HeroGame.Helpers
 
     public partial class DataContext : DbContext
     {
-
         protected readonly IConfiguration Configuration;
 
         public DataContext( IConfiguration configuration )
@@ -25,6 +24,7 @@ namespace HeroGame.Helpers
         }
 
         public DbSet<Account> Accounts { get; set; }
+
+        public DbSet<Hero> Heroes { get; set; }
     }
 }
-

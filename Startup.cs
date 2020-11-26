@@ -13,6 +13,8 @@ using HeroGame.Services;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 
 namespace HeroGame
 {
@@ -44,9 +46,22 @@ namespace HeroGame
             services.AddMvc();
 
             if( _env.IsProduction() )
+            {
                 services.AddDbContext<DataContext>();
+            }
 
-            services.AddCors();
+            services.AddDbContext<DataContext>( options =>
+                       options.UseSqlServer( _configuration.GetConnectionString( "Hero" ) ) );
+
+            services.AddCors( options => options.AddPolicy( "ApiCORSPolicy", builder => 
+            {
+                builder.WithOrigins( "http://localhost:54683" )
+                    .SetIsOriginAllowed( _ => true )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }));
+
             services.AddControllers();
 
             var appSettingsSection = _configuration.GetSection( "AppSettings" );
@@ -54,40 +69,25 @@ namespace HeroGame
 
             var appSettings = appSettingsSection.Get<AppSettings>();
             var key = Encoding.ASCII.GetBytes( appSettings.Secret );
-            services.AddAuthentication( x => {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            } )
-            .AddJwtBearer( x => {
-                x.Events = new JwtBearerEvents {
-                    OnTokenValidated = context => {
-                        var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-                        var userId = int.Parse( context.Principal.Identity.Name );
-                        var user = userService.GetById( userId );
-                        if( user == null )
-                        {
-                            // return unauthorized if user no longer exists
-                            context.Fail( "Unauthorized" );
+
+            services.AddAuthentication( CookieAuthenticationDefaults.AuthenticationScheme )
+                .AddCookie( options => {
+                    options.Cookie.Name = "STGH_Authentication";
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                    options.Events = new CookieAuthenticationEvents {
+                        OnRedirectToLogin = redirectContext => {
+                            redirectContext.HttpContext.Response.StatusCode = 401;
+                            return Task.CompletedTask;
                         }
-                        return Task.CompletedTask;
-                    }
-                };
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey( key ),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            } );
+                    };
+                } );
 
             // configure DI for application services
-            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAccountService, AccountService>();
 
-            services.AddDbContext<DataContext>( options =>
-                       options.UseSqlServer( _configuration.GetConnectionString("Hero") ) );
-
+            services.AddScoped<IHeroesService, HeroesService>();
 
             services.AddSwaggerGen( c => {
                 c.SwaggerDoc( "v1", new OpenApiInfo { Title = "HeroGame", Version = "v1" } );
@@ -107,9 +107,12 @@ namespace HeroGame
                 app.UseSwaggerUI( c => c.SwaggerEndpoint( "/swagger/v1/swagger.json", "HeroGame v1" ) );
             }
 
-            app.UseHttpsRedirection();
+           // app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors( "ApiCORSPolicy" );
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

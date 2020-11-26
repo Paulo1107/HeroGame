@@ -1,10 +1,10 @@
-﻿
-namespace HeroGame.Entities
-{
-    public class Hero
-    {
-        public int HeroId { get; set; }
+﻿using System;
+using System.Collections.Generic;
 
+namespace HeroGame.Models
+{
+    public class RegisterHeroes
+    {
         public int AccountId { get; set; }
 
         public string Name { get; set; }
@@ -26,4 +26,3 @@ namespace HeroGame.Entities
         public int PositionY { get; set; }
     }
 }
-

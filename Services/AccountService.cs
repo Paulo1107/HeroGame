@@ -4,11 +4,10 @@ namespace HeroGame.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
     using HeroGame.Entities;
     using HeroGame.Helpers;
 
-    public interface IUserService
+    public interface IAccountService
     {
         Account Authenticate( string username, string password );
         IEnumerable<Account> GetAll();
@@ -18,11 +17,11 @@ namespace HeroGame.Services
         void Delete( int id );
     }
 
-    public class UserService : IUserService
+    public class AccountService : IAccountService
     {
         private DataContext _context;
 
-        public UserService( DataContext dataContext )
+        public AccountService( DataContext dataContext )
         {
             _context = dataContext;
         }
@@ -138,12 +137,12 @@ namespace HeroGame.Services
         {
             if( password == null )
             {
-                throw new ArgumentNullException( "password" );
+                throw new ArgumentNullException( nameof( password ) );
             }
 
             if( string.IsNullOrWhiteSpace( password ) )
             {
-                throw new ArgumentException( "Value cannot be empty or whitespace only string.", "password" );
+                throw new ArgumentException( "Value cannot be empty or whitespace only string.", nameof( password ) );
             }
 
             using var hmac = new System.Security.Cryptography.HMACSHA512();
@@ -155,11 +154,11 @@ namespace HeroGame.Services
         {
             if( password == null )
             {
-                throw new ArgumentNullException( "password" );
+                throw new ArgumentNullException( nameof( password ) );
             }
             if( string.IsNullOrWhiteSpace( password ) )
             {
-                throw new ArgumentException( "Value cannot be empty or whitespace only string.", "password" );
+                throw new ArgumentException( "Value cannot be empty or whitespace only string.", nameof( password ) );
             }
             if( storedHash.Length != 64 )
             {
